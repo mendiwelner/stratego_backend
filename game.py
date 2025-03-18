@@ -86,7 +86,7 @@ class Game:
         else:
             return "not a legal move!"
 
-    async def send_response_to_player(self, player_id: int, response: dict):
+    async def send_response_to_player(self, player_id: int, response: dict) -> None:
         await self.players[player_id-1].websocket.send_text(json.dumps(response))
 
     async def send_response_to_players(self, player_1_response: dict, player_2_response: dict):

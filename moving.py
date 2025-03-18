@@ -10,7 +10,6 @@ class Moving:
         self.game = game
         self.board = game.board
 
-
     def legal_move(self, move, player_id) -> bool:
         # todo
         return True
@@ -42,7 +41,7 @@ class Moving:
     async def do_move(self, move: Move, player_id: int):
         if player_id == 1:
             move = move.get_reverse_move()
-        move_to_client = self.do_move_in_board(move)
+        move_to_client = await self.do_move_in_board(move)
         await self.game.send_response_to_players({
             "type": "make_move",
             "move": move_to_client.get_move_to_client(1).model_dump()
@@ -54,11 +53,11 @@ class Moving:
         )
         self.game.flip_turn()
 
-    def do_move_in_board(self, move: Move) -> MoveToClient:
+    async def do_move_in_board(self, move: Move) -> MoveToClient:
         in_from_cell = self.board.in_cell(move.from_cell)
         in_to_cell = self.board.in_cell(move.to_cell)
         if isinstance(in_to_cell, Piece):
-            return self.attack_move(move, in_from_cell, in_to_cell)
+            return await self.attack_move(move, in_from_cell, in_to_cell)
         else:
             self.board.put_in_cell(move.from_cell, "o")
             self.board.put_in_cell(move.to_cell, in_from_cell)
@@ -66,22 +65,25 @@ class Moving:
                                 in_from_cell="o", in_to_cell=in_from_cell,
                                 in_from_cell_show=None, in_to_cell_show=None)
 
-    def attack_move(self, move: Move, in_from_cell: Piece, in_to_cell: Piece) -> MoveToClient:
+    async def attack_move(self, move: Move, in_from_cell: Piece, in_to_cell: Piece) -> MoveToClient:
         loser = in_from_cell.return_losers_in_attack(in_to_cell)
         self.board.put_in_cell(move.from_cell, "o")
         attacker_position = self.calculate_attacker_position(move, in_from_cell)
         if loser == 0:
             self.board.put_in_cell(move.to_cell, "o")
+            await self.send_to_graveyard(0, in_from_cell, in_to_cell)
             return MoveToClient(move_type="attack", from_cell=move.from_cell, to_cell=move.to_cell,
                                 in_from_cell="o", in_to_cell="o",
                                 in_from_cell_show=in_from_cell, in_to_cell_show=in_to_cell,
                                 attacker_position=attacker_position)
         elif loser == 1:
+            await self.send_to_graveyard(1, in_from_cell, in_to_cell)
             return MoveToClient(move_type="attack", from_cell=move.from_cell, to_cell=move.to_cell,
                                 in_from_cell="o", in_to_cell=in_to_cell,
                                 in_from_cell_show=in_from_cell, in_to_cell_show=in_to_cell,
                                 attacker_position=attacker_position)
         elif loser == 2:
+            await self.send_to_graveyard(2, in_from_cell, in_to_cell)
             self.board.put_in_cell(move.to_cell, in_from_cell)
             return MoveToClient(move_type="attack", from_cell=move.from_cell, to_cell=move.to_cell,
                                 in_from_cell="o", in_to_cell=in_from_cell,
@@ -184,3 +186,19 @@ class Moving:
         elif cell_content.value == "b" or cell_content.value == "f":
             return {"type": "error_cell_pushed", "message": "This piece can't move!"}
         return None
+
+    async def send_to_graveyard(self, number_of_loser: int, in_from_cell: Piece, in_to_cell: Piece) -> None:
+        print(in_from_cell.number_of_player, in_to_cell.number_of_player)
+        if in_from_cell.number_of_player == 1:
+            player_1_piece = in_from_cell
+            player_2_piece = in_to_cell
+        else:
+            player_1_piece = in_to_cell
+            player_2_piece = in_from_cell
+        if number_of_loser == 0:
+            await self.game.send_response_to_player(1, {"type": "piece_captured", "piece": player_1_piece.to_dict()})
+            await self.game.send_response_to_player(2, {"type": "piece_captured", "piece": player_2_piece.to_dict()})
+        elif number_of_loser == 1:
+            await self.game.send_response_to_player(1, {"type": "piece_captured", "piece": player_1_piece.to_dict()})
+        elif number_of_loser == 2:
+            await self.game.send_response_to_player(2, {"type": "piece_captured", "piece": player_2_piece.to_dict()})

@@ -11,16 +11,8 @@ class Piece(BaseModel):
     def to_dict(self):
         return {
             "number_of_player": self.number_of_player,
-            "value": self.show_value()
+            "value": self.value
         }
-
-    def show_value(self):
-        if self.value == "":
-            return ""
-        elif self.value != '10' and self.value is not None:
-            return self.value[0]
-        elif self.value == '10':
-            return self.value
 
     def return_losers_in_attack(self, in_to_cell: "Piece") -> int:
         if in_to_cell.value == "b":
