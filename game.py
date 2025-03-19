@@ -89,9 +89,13 @@ class Game:
     async def send_response_to_player(self, player_id: int, response: dict) -> None:
         await self.players[player_id-1].websocket.send_text(json.dumps(response))
 
-    async def send_response_to_players(self, player_1_response: dict, player_2_response: dict):
+    async def send_response_to_players(self, player_1_response: dict, player_2_response: dict) -> None:
         await self.send_response_to_player(1, player_1_response)
         await self.send_response_to_player(2, player_2_response)
+
+    async def send_same_response_to_players(self, response: dict) -> None:
+        for player in self.players:
+            await player.websocket.send_text(json.dumps(response))
 
     def is_full(self):
         return len(self.players) == 2
@@ -102,10 +106,12 @@ class Game:
     async def send_board_to_players(self):
         player_1_data = {
             "type": "board",
+            "number_of_player": 1,
             "board": self.board.player_1_matrix()
         }
         player_2_data = {
             "type": "board",
+            "number_of_player": 2,
             "board": self.board.player_2_matrix()
         }
         tasks = [

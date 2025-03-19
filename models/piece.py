@@ -25,7 +25,7 @@ class Piece(BaseModel):
         elif self.value == in_to_cell.value:
             return 0
         elif self.value == "1" and in_to_cell.value == "10":
-            return 1
+            return 2
         else:
             if int(self.value) > int(in_to_cell.value):
                 return 2

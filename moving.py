@@ -189,16 +189,10 @@ class Moving:
 
     async def send_to_graveyard(self, number_of_loser: int, in_from_cell: Piece, in_to_cell: Piece) -> None:
         print(in_from_cell.number_of_player, in_to_cell.number_of_player)
-        if in_from_cell.number_of_player == 1:
-            player_1_piece = in_from_cell
-            player_2_piece = in_to_cell
-        else:
-            player_1_piece = in_to_cell
-            player_2_piece = in_from_cell
         if number_of_loser == 0:
-            await self.game.send_response_to_player(1, {"type": "piece_captured", "piece": player_1_piece.to_dict()})
-            await self.game.send_response_to_player(2, {"type": "piece_captured", "piece": player_2_piece.to_dict()})
+            await self.game.send_same_response_to_players({"type": "piece_captured", "piece": in_from_cell.to_dict()})
+            await self.game.send_same_response_to_players({"type": "piece_captured", "piece": in_to_cell.to_dict()})
         elif number_of_loser == 1:
-            await self.game.send_response_to_player(1, {"type": "piece_captured", "piece": player_1_piece.to_dict()})
+            await self.game.send_same_response_to_players({"type": "piece_captured", "piece": in_from_cell.to_dict()})
         elif number_of_loser == 2:
-            await self.game.send_response_to_player(2, {"type": "piece_captured", "piece": player_2_piece.to_dict()})
+            await self.game.send_same_response_to_players({"type": "piece_captured", "piece": in_to_cell.to_dict()})
