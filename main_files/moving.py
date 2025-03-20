@@ -188,7 +188,6 @@ class Moving:
         return None
 
     async def send_to_graveyard(self, number_of_loser: int, in_from_cell: Piece, in_to_cell: Piece) -> None:
-        print(in_from_cell.number_of_player, in_to_cell.number_of_player)
         if number_of_loser == 0:
             await self.game.send_same_response_to_players({"type": "piece_captured", "piece": in_from_cell.to_dict()})
             await self.game.send_same_response_to_players({"type": "piece_captured", "piece": in_to_cell.to_dict()})

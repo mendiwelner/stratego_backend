@@ -1,13 +1,15 @@
 import os
+import sys
+
 from fastapi import FastAPI, WebSocket
 from starlette.middleware.cors import CORSMiddleware
+from routes.game_routes import games_router
 from services.game_manage import GameManage
-from pyngrok import ngrok
+from routes.user_routes import router as user_router
 import uvicorn
 
 app = FastAPI()
 
-# הוספת middleware של CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,26 +18,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-@app.get("/get_all_games")
-async def get_all_games():
-    return GameManage.return_all_games()
+app.include_router(user_router)
+app.include_router(games_router)
 
 
-@app.get("/get_game")
-async def get_game(game_number: int):
-    return GameManage.return_game(game_number)
-
-
-@app.post("/create_game")
-async def create_game():
-    return GameManage.create_game()
-
-
-@app.websocket("/player_connect_game")
+@games_router.websocket("/player_connect_game")
 async def player_connect_game(player_websocket: WebSocket):
     await GameManage.player_connect_game(player_websocket)
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)
