@@ -1,7 +1,7 @@
-from game import Game
+from main_files.game import Game
 from models.move import Move
 from models.piece import Piece
-from player import Player
+from main_files.player import Player
 
 if __name__ == "__main__":
     player_1_set_up = [

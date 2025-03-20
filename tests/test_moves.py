@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from game import Game
+from main_files.game import Game
 from models.move import Move
 from models.cell import Cell
 from models.piece import Piece

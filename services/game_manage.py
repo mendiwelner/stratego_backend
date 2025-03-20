@@ -1,4 +1,4 @@
-from game import Game
+from main_files.game import Game
 from fastapi import WebSocket, WebSocketDisconnect
 
 
