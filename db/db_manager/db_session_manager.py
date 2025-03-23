@@ -1,11 +1,12 @@
 from db.db_manager.database import SessionLocal
+from sqlalchemy.orm import Session
 
 
 class DBSessionManager:
     @staticmethod
-    def get_db():
+    def get_db() -> Session:
         db = SessionLocal()
         try:
-            yield db
+            return db
         finally:
             db.close()

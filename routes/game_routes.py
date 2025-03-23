@@ -38,5 +38,5 @@ def gat_games_data(db: Session = Depends(DBSessionManager.get_db)):
 
 @games_router.websocket("/player_connect_game")
 async def player_connect_game(player_websocket: WebSocket):
-    await GameManage.player_connect_game(player_websocket)
 
+    await GameManage.player_connect_game(player_websocket)

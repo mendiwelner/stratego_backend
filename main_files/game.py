@@ -21,9 +21,9 @@ class Game:
         self.player_turn = 1
         self.moving = Moving(self)
 
-    async def connect_player(self, player_websocket: WebSocket):
+    async def connect_player(self, player_websocket: WebSocket, player_name: str):
         if len(self.players) < 2:
-            self.players.append(Player(len(self.players) + 1, player_websocket))
+            self.players.append(Player(len(self.players) + 1, player_websocket, player_name=player_name))
             await self.send_connect_massage_to_players()
             return len(self.players)
         return 0
@@ -107,12 +107,20 @@ class Game:
         player_1_data = {
             "type": "board",
             "number_of_player": 1,
-            "board": self.board.player_1_matrix()
+            "board": self.board.player_1_matrix(),
+            "players_data": {
+                "your_name": self.players[0].player_name,
+                "opponent_name": self.players[1].player_name,
+            }
         }
         player_2_data = {
             "type": "board",
             "number_of_player": 2,
-            "board": self.board.player_2_matrix()
+            "board": self.board.player_2_matrix(),
+            "players_data": {
+                "your_name": self.players[1].player_name,
+                "opponent_name": self.players[0].player_name,
+            }
         }
         tasks = [
             self.players[0].websocket.send_text(json.dumps(player_1_data, cls=PieceEncoder)),
