@@ -13,16 +13,20 @@ class UserCRUD:
         return db.query(User).all()
 
     @staticmethod
-    def create_user(db: Session, name: str, email: str):
-        existing_user = db.query(User).filter(User.email == email).first()
+    def create_user(db: Session, name: str, password: str):
+        existing_user = db.query(User).filter(User.name == name).first()
         if existing_user:
             raise HTTPException(status_code=400, detail="Address already exists!")
 
-        new_user = User(name=name, email=email)
+        new_user = User(name=name, password=password)
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
         return new_user
+
+    @staticmethod
+    def get_user_by_name(db: Session, name: str):
+        return db.query(User).filter(User.name == name).first()
 
     @staticmethod
     def delete_user(db: Session, user_id: int):
@@ -43,3 +47,4 @@ class UserCRUD:
         except Exception as e:
             db.rollback()
             return {"message": f"Error occurred: {str(e)}"}
+

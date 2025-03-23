@@ -1,10 +1,6 @@
-import os
-import sys
-
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from routes.game_routes import games_router
-from services.game_manage import GameManage
 from routes.user_routes import router as user_router
 import uvicorn
 
@@ -20,11 +16,6 @@ app.add_middleware(
 
 app.include_router(user_router)
 app.include_router(games_router)
-
-
-@games_router.websocket("/player_connect_game")
-async def player_connect_game(player_websocket: WebSocket):
-    await GameManage.player_connect_game(player_websocket)
 
 
 if __name__ == "__main__":
