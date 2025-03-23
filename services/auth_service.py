@@ -13,3 +13,8 @@ class AuthService:
             raise HTTPException(status_code=401, detail="Invalid credentials")
         access_token = AuthManager.create_access_token(data={"user_id": user.id})
         return {"access_token": access_token, "token_type": "bearer"}
+
+    @staticmethod
+    def authenticate_new_user(db: Session, name: str, password: str):
+        user = UserCRUD.create_user(db, name, password)
+        return AuthService.authenticate_user(db, OAuth2PasswordRequestForm(username=name, password=password))

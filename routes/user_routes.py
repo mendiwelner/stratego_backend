@@ -13,7 +13,7 @@ router = APIRouter(
 
 @router.post("/")
 def create_new_user(name: str, password: str, db: Session = Depends(DBSessionManager.get_db)):
-    return UserCRUD.create_user(db, name, password)
+    return AuthService.authenticate_new_user(db, name, password)
 
 
 @router.post("/login")
