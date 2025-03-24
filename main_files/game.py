@@ -2,12 +2,12 @@ from typing import List, Dict
 from fastapi import WebSocket
 import json
 from starlette.websockets import WebSocketDisconnect
+from main_files.piece_encoder import PieceEncoder
 from models.cell import Cell
 from models.move import Move
-from moving import Moving
-from piece_encoder import PieceEncoder
-from player import Player
-from board import Board
+from main_files.moving import Moving
+from main_files.player import Player
+from main_files.board import Board
 import asyncio
 
 

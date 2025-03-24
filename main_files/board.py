@@ -98,3 +98,25 @@ class Board:
                 if isinstance(cell, Piece) and cell.number_of_player == 1:
                     cell.value = ""
         return matrix_copy
+
+    @staticmethod
+    def convert_to_board_with_pieces(board_matrix: List[List[str]], player_number: int) -> List[List[Piece]]:
+        new_board_matrix = []
+        for row in range(10):
+            new_row = []
+            for cell in range(10):
+                piece = Piece(number_of_player=player_number, value=board_matrix[row][cell])
+                new_row.append(piece)
+            new_board_matrix.append(new_row)
+        return new_board_matrix
+
+    @staticmethod
+    def initial_set_up(player_number):
+        board_matrix = [
+            ["o", "o", "o", "x", "x", "x", "o", "o", "o", "o"],
+            ["o", "f", "b", "x", "x", "x", "o", "f", "b", "o"],
+            ["o", "f", "1", "2", "x", "x", "o", "f", "b", "o"],
+            ["o", "f", "1", "2", "x", "x", "o", "f", "b", "o"]
+        ]
+
+
