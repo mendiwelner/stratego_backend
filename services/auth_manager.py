@@ -35,7 +35,7 @@ class AuthManager:
         return encoded_jwt
 
     @staticmethod
-    async def verify_token(token: str):
+    async def verify_token(token: str) -> int:
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
             exp = payload.get("exp")

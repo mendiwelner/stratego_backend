@@ -6,38 +6,37 @@ from fastapi.security import OAuth2PasswordRequestForm
 from services.auth_service import AuthService
 from services.user_service import UserService
 
-router = APIRouter(
+user_router = APIRouter(
     prefix="/users",
     tags=["users"]
 )
 
 
-@router.post("/")
+@user_router.post("/")
 def create_new_user(name: str, password: str, db: Session = Depends(DBSessionManager.get_db)) -> dict:
     return UserService.create_new_user(name, password, db)
 
 
-@router.post("/login")
+@user_router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(DBSessionManager.get_db)):
     return UserService.login(form_data, db)
 
 
-
-@router.get("/{user_id}")
+@user_router.get("/{user_id}")
 def read_user(user_id: int, db: Session = Depends(DBSessionManager.get_db)):
     return UserCRUD.get_user(db, user_id)
 
 
-@router.get("/")
+@user_router.get("/")
 def get_users(db: Session = Depends(DBSessionManager.get_db)):
     return UserCRUD.get_users(db)
 
 
-@router.delete("/{user_id}")
+@user_router.delete("/{user_id}")
 def delete_user(user_id: int, db: Session = Depends(DBSessionManager.get_db)):
     return UserCRUD.delete_user(db, user_id)
 
 
-@router.delete("/")
+@user_router.delete("/")
 def delete_all_users(db: Session = Depends(DBSessionManager.get_db)):
     return UserCRUD.delete_all_users(db)

@@ -21,9 +21,12 @@ class Game:
         self.player_turn = 1
         self.moving = Moving(self)
 
-    async def connect_player(self, player_websocket: WebSocket, player_name: str) -> int:
+    async def connect_player(self, player_websocket: WebSocket, player_name: str, setup: str) -> int:
         if len(self.players) < 2:
-            self.players.append(Player(len(self.players) + 1, player_websocket, player_name=player_name))
+            self.players.append(Player(player_id=len(self.players) + 1,
+                                       websocket=player_websocket,
+                                       setup=setup,
+                                       player_name=player_name))
             await self.send_connect_massage_to_players()
             return len(self.players)
         return 0
@@ -63,7 +66,8 @@ class Game:
     async def process_data(self, player_id: int, data: Dict) -> dict:
         if data["action"] == "make_move":
             move = Move(**data["move"])
-            return await self.process_move(player_id, move)
+            move_state = await self.process_move(player_id, move)
+            return {"type": "message", "message": move_state}
         elif data["action"] == "check_cell_move":
             cell = Cell(**data["cell"])
             return self.moving.can_move(player_id, cell)
@@ -134,3 +138,4 @@ class Game:
             self.player_turn = 2
         else:
             self.player_turn = 1
+
