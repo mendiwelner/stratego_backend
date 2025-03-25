@@ -21,31 +21,30 @@ class Game:
         self.player_turn = 1
         self.moving = Moving(self)
 
-    async def connect_player(self, player_websocket: WebSocket, player_name: str):
+    async def connect_player(self, player_websocket: WebSocket, player_name: str) -> int:
         if len(self.players) < 2:
             self.players.append(Player(len(self.players) + 1, player_websocket, player_name=player_name))
             await self.send_connect_massage_to_players()
             return len(self.players)
         return 0
 
-    async def send_connect_massage_to_players(self):
+    async def send_connect_massage_to_players(self) -> None:
         if len(self.players) == 1:
             await self.players[0].websocket.send_text(json.dumps({"type": "message", "message": "waiting for another "
                                                                                                 "player..."}))
-
         else:
             for player in self.players:
                 await player.websocket.send_text(json.dumps({"type": "message", "message": "game is ready!"}))
             self.initial_game()
             await self.send_board_to_players()
 
-    async def remove_player(self, player_id: int):
+    async def remove_player(self, player_id: int) -> None:
         for player in self.players:
             if player.player_id == player_id:
                 self.players.remove(player)
         await self.players[0].websocket.send_text(json.dumps({"type": "message", "message": "other player disconnected"}))
 
-    async def disconnect_players(self):
+    async def disconnect_players(self) -> None:
         for player in self.players[:]:
             try:
                 await player.websocket.send_text(
@@ -80,9 +79,10 @@ class Game:
             data["type"] = "mark_cell_hover"
         return data
 
-    async def process_move(self, player_id: int, move: Move):
+    async def process_move(self, player_id: int, move: Move) -> str:
         if self.moving.legal_move(move, player_id):
-            return await self.moving.do_move(move, player_id)
+            await self.moving.do_move(move, player_id)
+            return "move done!"
         else:
             return "not a legal move!"
 
@@ -97,13 +97,13 @@ class Game:
         for player in self.players:
             await player.websocket.send_text(json.dumps(response))
 
-    def is_full(self):
+    def is_full(self) -> bool:
         return len(self.players) == 2
 
-    def initial_game(self):
+    def initial_game(self) -> None:
         self.board.initial_board()
 
-    async def send_board_to_players(self):
+    async def send_board_to_players(self) -> None:
         player_1_data = {
             "type": "board",
             "number_of_player": 1,
@@ -128,7 +128,7 @@ class Game:
         ]
         await asyncio.gather(*tasks)
 
-    def flip_turn(self):
+    def flip_turn(self) -> None:
         self.turn += 1
         if self.player_turn == 1:
             self.player_turn = 2

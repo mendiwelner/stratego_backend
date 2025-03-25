@@ -13,12 +13,11 @@ class UserCRUD:
         return db.query(User).all()
 
     @staticmethod
-    def create_user(db: Session, name: str, password: str):
+    def create_user(db: Session, name: str, password: str, setup: str):
         existing_user = db.query(User).filter(User.name == name).first()
         if existing_user:
             raise HTTPException(status_code=400, detail="Address already exists!")
-
-        new_user = User(name=name, password=password)
+        new_user = User(name=name, password=password, setup=setup)
         db.add(new_user)
         db.commit()
         db.refresh(new_user)

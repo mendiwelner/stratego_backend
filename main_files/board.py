@@ -111,12 +111,19 @@ class Board:
         return new_board_matrix
 
     @staticmethod
-    def initial_set_up(player_number):
-        board_matrix = [
-            ["o", "o", "o", "x", "x", "x", "o", "o", "o", "o"],
-            ["o", "f", "b", "x", "x", "x", "o", "f", "b", "o"],
-            ["o", "f", "1", "2", "x", "x", "o", "f", "b", "o"],
-            ["o", "f", "1", "2", "x", "x", "o", "f", "b", "o"]
+    def initial_default_set_up() -> str:
+        board_set_up = [
+            ["2", "2", "2", "2", "2", "2", "b", "b", "2", "2"],
+            ["6", "6", "7", "7", "7", "9", "8", "8", "b", "1"],
+            ["6", "6", "5", "5", "b", "0", "5", "5", "4", "4"],
+            ["3", "3", "3", "b", "f", "b", "3", "3", "4", "4"]
         ]
+        return Board.set_up_matrix_to_string(board_set_up)
 
+    @staticmethod
+    def set_up_matrix_to_string(matrix: List[List[str]]) -> str:
+        return ''.join(''.join(row) for row in matrix)
 
+    @staticmethod
+    def set_up_string_to_matrix(set_up_string: str) -> List[List[str]]:
+        return [list(set_up_string[i:i + 10]) for i in range(0, len(set_up_string), 10)]

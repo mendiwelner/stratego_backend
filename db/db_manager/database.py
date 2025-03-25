@@ -12,8 +12,6 @@ SQLALCHEMY_DATABASE_URL = "sqlite:///./stratego.db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base.metadata.create_all(bind=engine)
-
 inspector = inspect(engine)
 for table_name in inspector.get_table_names():
     print(f"Table: {table_name}")

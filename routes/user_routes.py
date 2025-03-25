@@ -4,6 +4,7 @@ from db.db_crud.user_crud import UserCRUD
 from db.db_manager.db_session_manager import DBSessionManager
 from fastapi.security import OAuth2PasswordRequestForm
 from services.auth_service import AuthService
+from services.user_service import UserService
 
 router = APIRouter(
     prefix="/users",
@@ -12,13 +13,14 @@ router = APIRouter(
 
 
 @router.post("/")
-def create_new_user(name: str, password: str, db: Session = Depends(DBSessionManager.get_db)):
-    return AuthService.authenticate_new_user(db, name, password)
+def create_new_user(name: str, password: str, db: Session = Depends(DBSessionManager.get_db)) -> dict:
+    return UserService.create_new_user(name, password, db)
 
 
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(DBSessionManager.get_db)):
-    return AuthService.authenticate_user(db, form_data)
+    return UserService.login(form_data, db)
+
 
 
 @router.get("/{user_id}")

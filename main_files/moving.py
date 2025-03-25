@@ -18,7 +18,7 @@ class Moving:
         # except Exception:
         #     return False
 
-    def is_legal_move(self, move, player_id) -> bool:
+    def is_legal_move(self, move: Move, player_id: int) -> bool:
         in_from_cell = self.board.in_cell(move.from_cell)
         in_to_cell = self.board.in_cell(move.to_cell)
         if not isinstance(in_from_cell, Piece):
@@ -38,7 +38,7 @@ class Moving:
         elif in_from_cell.value == "2":
             return self.check_2_piece_move(move)
 
-    async def do_move(self, move: Move, player_id: int):
+    async def do_move(self, move: Move, player_id: int) -> None:
         if player_id == 1:
             move = move.get_reverse_move()
         move_to_client = await self.do_move_in_board(move)
@@ -104,12 +104,12 @@ class Moving:
         return attacker_position
 
     @staticmethod
-    def check_none_2_piece_move(move) -> bool:
+    def check_none_2_piece_move(move: Move) -> bool:
         row_diff = abs(move.to_cell.row - move.from_cell.row)
         col_diff = abs(move.to_cell.column - move.from_cell.column)
         return (row_diff == 1 and col_diff == 0) or (row_diff == 0 and col_diff == 1)
 
-    def check_2_piece_move(self, move) -> bool:
+    def check_2_piece_move(self, move: Move) -> bool:
         from_row, from_col = move.from_cell.row, move.from_cell.column
         to_row, to_col = move.to_cell.row, move.to_cell.column
         if from_row != to_row and from_col != to_col:
@@ -124,7 +124,7 @@ class Moving:
             current_col += col_step
         return True
 
-    def can_move(self, player_id, cell) -> dict:
+    def can_move(self, player_id: int, cell: Cell) -> dict:
         if player_id == 1:
             cell = cell.get_reverse_cell()
         cell_content = self.board.in_cell(cell)
@@ -165,7 +165,7 @@ class Moving:
                 current_col += col_step
         return can_move_to
 
-    def can_move_there(self, cell, player_id):
+    def can_move_there(self, cell: Cell, player_id: int) -> bool:
         in_cell = self.board.in_cell(cell)
         if in_cell == 'x':
             return False
