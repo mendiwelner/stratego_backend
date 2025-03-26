@@ -1,6 +1,6 @@
 from db.db_crud.user_crud import UserCRUD
 from main_files.game import Game
-from fastapi import WebSocket, WebSocketDisconnect, Depends
+from fastapi import WebSocket, WebSocketDisconnect
 from db.db_manager.db_session_manager import DBSessionManager
 from sqlalchemy.orm import Session
 from services.auth_manager import AuthManager
@@ -46,7 +46,7 @@ class GameManage:
         return UserCRUD.get_user(db=db, user_id=user_id).name, UserCRUD.get_user(db=db, user_id=user_id).setup
 
     @staticmethod
-    async def process_player_to_game_connection(player_websocket: WebSocket, player_id: str, game: Game) -> None:
+    async def process_player_to_game_connection(player_websocket: WebSocket, player_id: int, game: Game) -> None:
         try:
             await GameManage.get_data_and_send_response(player_websocket, player_id, game)
         except WebSocketDisconnect:
@@ -61,11 +61,11 @@ class GameManage:
         await player_websocket.close(code=1011, reason=reason)
 
     @staticmethod
-    async def get_data_and_send_response(player_websocket: WebSocket, player_id: str, game) -> None:
+    async def get_data_and_send_response(player_websocket: WebSocket, player_id: int, game) -> None:
         while True:
             data = await player_websocket.receive_json()
             response = await game.process_data(player_id, data)
-            await game.send_response_to_player(player_id, response)
+            await game.game_messenger.send_response_to_player(player_id, response)
 
     @classmethod
     def return_all_games(cls) -> dict:
@@ -81,5 +81,3 @@ class GameManage:
         if game:
             await game.disconnect_players()
             del cls.games[game_id]
-
-

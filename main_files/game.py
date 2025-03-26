@@ -2,13 +2,12 @@ from typing import List, Dict
 from fastapi import WebSocket
 import json
 from starlette.websockets import WebSocketDisconnect
-from main_files.piece_encoder import PieceEncoder
+from main_files.game_messenger import GameMessenger
 from models.cell import Cell
 from models.move import Move
 from main_files.moving import Moving
 from main_files.player import Player
 from main_files.board import Board
-import asyncio
 
 
 class Game:
@@ -20,6 +19,7 @@ class Game:
         self.turn = 1
         self.player_turn = 1
         self.moving = Moving(self)
+        self.game_messenger = GameMessenger(self)
 
     async def connect_player(self, player_websocket: WebSocket, player_name: str, setup: str) -> int:
         if len(self.players) < 2:
@@ -27,19 +27,9 @@ class Game:
                                        websocket=player_websocket,
                                        setup=setup,
                                        player_name=player_name))
-            await self.send_connect_massage_to_players()
+            await self.game_messenger.send_connect_massage_to_players()
             return len(self.players)
         return 0
-
-    async def send_connect_massage_to_players(self) -> None:
-        if len(self.players) == 1:
-            await self.players[0].websocket.send_text(json.dumps({"type": "message", "message": "waiting for another "
-                                                                                                "player..."}))
-        else:
-            for player in self.players:
-                await player.websocket.send_text(json.dumps({"type": "message", "message": "game is ready!"}))
-            self.initial_game()
-            await self.send_board_to_players()
 
     async def remove_player(self, player_id: int) -> None:
         for player in self.players:
@@ -90,47 +80,11 @@ class Game:
         else:
             return "not a legal move!"
 
-    async def send_response_to_player(self, player_id: int, response: dict) -> None:
-        await self.players[player_id-1].websocket.send_text(json.dumps(response))
-
-    async def send_response_to_players(self, player_1_response: dict, player_2_response: dict) -> None:
-        await self.send_response_to_player(1, player_1_response)
-        await self.send_response_to_player(2, player_2_response)
-
-    async def send_same_response_to_players(self, response: dict) -> None:
-        for player in self.players:
-            await player.websocket.send_text(json.dumps(response))
-
     def is_full(self) -> bool:
         return len(self.players) == 2
 
     def initial_game(self) -> None:
         self.board.initial_board()
-
-    async def send_board_to_players(self) -> None:
-        player_1_data = {
-            "type": "board",
-            "number_of_player": 1,
-            "board": self.board.player_1_matrix(),
-            "players_data": {
-                "your_name": self.players[0].player_name,
-                "opponent_name": self.players[1].player_name,
-            }
-        }
-        player_2_data = {
-            "type": "board",
-            "number_of_player": 2,
-            "board": self.board.player_2_matrix(),
-            "players_data": {
-                "your_name": self.players[1].player_name,
-                "opponent_name": self.players[0].player_name,
-            }
-        }
-        tasks = [
-            self.players[0].websocket.send_text(json.dumps(player_1_data, cls=PieceEncoder)),
-            self.players[1].websocket.send_text(json.dumps(player_2_data, cls=PieceEncoder))
-        ]
-        await asyncio.gather(*tasks)
 
     def flip_turn(self) -> None:
         self.turn += 1
@@ -138,4 +92,3 @@ class Game:
             self.player_turn = 2
         else:
             self.player_turn = 1
-

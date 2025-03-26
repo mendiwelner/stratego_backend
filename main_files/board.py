@@ -1,5 +1,6 @@
 import random
 from typing import List
+from main_files.setup import Setup
 from models.cell import Cell
 from models.piece import Piece
 import copy
@@ -24,16 +25,16 @@ class Board:
         player_2_set_up = self.game.players[1].setup
 
         if player_1_set_up:
-            player_1_matrix_set_up = Board.set_up_string_to_matrix(player_1_set_up)
-            player_1_matrix_set_up = Board.reverse_set_up_matrix(player_1_matrix_set_up)
-            player_1_board_set_up = Board.string_matrix_to_board(player_1_matrix_set_up, 1)
+            player_1_matrix_set_up = Setup.set_up_string_to_matrix(player_1_set_up)
+            player_1_matrix_set_up = Setup.reverse_set_up_matrix(player_1_matrix_set_up)
+            player_1_board_set_up = Setup.string_matrix_to_board(player_1_matrix_set_up, 1)
             self.append_player_set_up(player_1_board_set_up, 0, 4)
         else:
             self.initial_random_player_pieces(1, 0, 4)
 
         if player_2_set_up:
-            player_2_matrix_set_up = Board.set_up_string_to_matrix(player_2_set_up)
-            player_2_board_set_up = Board.string_matrix_to_board(player_2_matrix_set_up, 2)
+            player_2_matrix_set_up = Setup.set_up_string_to_matrix(player_2_set_up)
+            player_2_board_set_up = Setup.string_matrix_to_board(player_2_matrix_set_up, 2)
             self.append_player_set_up(player_2_board_set_up, 6, 10)
         else:
             self.initial_random_player_pieces(2, 6, 10)
@@ -103,53 +104,3 @@ class Board:
                 if isinstance(cell, Piece) and cell.number_of_player == 1:
                     cell.value = ""
         return matrix_copy
-
-    @staticmethod
-    def convert_to_board_with_pieces(board_matrix: List[List[str]], player_number: int) -> List[List[Piece]]:
-        new_board_matrix = []
-        for row in range(10):
-            new_row = []
-            for cell in range(10):
-                piece = Piece(number_of_player=player_number, value=board_matrix[row][cell])
-                new_row.append(piece)
-            new_board_matrix.append(new_row)
-        return new_board_matrix
-
-    @staticmethod
-    def initial_default_set_up() -> str:
-        board_set_up = [
-            ["2", "2", "2", "2", "2", "2", "b", "b", "2", "2"],
-            ["6", "6", "7", "7", "7", "9", "8", "8", "b", "1"],
-            ["6", "6", "5", "5", "b", "0", "5", "5", "4", "4"],
-            ["3", "3", "3", "b", "f", "b", "3", "3", "4", "4"]
-        ]
-        return Board.set_up_matrix_to_string(board_set_up)
-
-    @staticmethod
-    def set_up_matrix_to_string(matrix: List[List[str]]) -> str:
-        return ''.join(''.join(row) for row in matrix)
-
-    @staticmethod
-    def set_up_string_to_matrix(set_up_string: str) -> List[List[str]]:
-        return [list(set_up_string[i:i + 10]) for i in range(0, len(set_up_string), 10)]
-
-    @staticmethod
-    def return_set_up_board(setup: str, player_number: int) -> List[List[Piece]]:
-        set_up_matrix = Board.set_up_string_to_matrix(setup)
-        piece_matrix = Board.string_matrix_to_board(set_up_matrix, player_number)
-        empty_matrix = [["" for column in range(10)] for row in range(6)]
-        return empty_matrix + piece_matrix
-
-    @staticmethod
-    def string_matrix_to_board(matrix: List[List[str]], player_number: int):
-        return [[Piece(number_of_player=player_number, value=str(10) if value == '0' else str(value))
-                 for value in row] for row in matrix]
-
-    @staticmethod
-    def reverse_set_up_matrix(matrix: List[List[str]]) -> List[List[str]]:
-        reversed_matrix = [
-            [matrix[3 - row][9 - col] for col in range(10)]
-            for row in range(4)
-        ]
-        return reversed_matrix
-

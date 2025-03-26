@@ -42,7 +42,7 @@ class Moving:
         if player_id == 1:
             move = move.get_reverse_move()
         move_to_client = await self.do_move_in_board(move)
-        await self.game.send_response_to_players({
+        await self.game.game_messenger.send_response_to_players({
             "type": "make_move",
             "move": move_to_client.get_move_to_client(1).model_dump()
         },
@@ -189,9 +189,9 @@ class Moving:
 
     async def send_to_graveyard(self, number_of_loser: int, in_from_cell: Piece, in_to_cell: Piece) -> None:
         if number_of_loser == 0:
-            await self.game.send_same_response_to_players({"type": "piece_captured", "piece": in_from_cell.to_dict()})
-            await self.game.send_same_response_to_players({"type": "piece_captured", "piece": in_to_cell.to_dict()})
+            await self.game.game_messenger.send_same_response_to_players({"type": "piece_captured", "piece": in_from_cell.to_dict()})
+            await self.game.game_messenger.send_same_response_to_players({"type": "piece_captured", "piece": in_to_cell.to_dict()})
         elif number_of_loser == 1:
-            await self.game.send_same_response_to_players({"type": "piece_captured", "piece": in_from_cell.to_dict()})
+            await self.game.game_messenger.send_same_response_to_players({"type": "piece_captured", "piece": in_from_cell.to_dict()})
         elif number_of_loser == 2:
-            await self.game.send_same_response_to_players({"type": "piece_captured", "piece": in_to_cell.to_dict()})
+            await self.game.game_messenger.send_same_response_to_players({"type": "piece_captured", "piece": in_to_cell.to_dict()})
