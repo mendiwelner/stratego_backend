@@ -11,3 +11,10 @@ class Move(BaseModel):
 
     def get_reverse_move(self, matrix_size: int = 10) -> 'Move':
         return Move(from_cell=self.from_cell.get_reverse_cell(matrix_size), to_cell=self.to_cell.get_reverse_cell(matrix_size))
+
+    @staticmethod
+    def create(from_cell: Cell, to_cell: Cell) -> 'Move':
+        return Move(from_cell=from_cell, to_cell=to_cell)
+
+    def get_reversed_direction_move(self) -> 'Move':
+        return Move(from_cell=self.to_cell, to_cell=self.from_cell)

@@ -42,6 +42,7 @@ class Moving:
         if player_id == 1:
             move = move.get_reverse_move()
         move_to_client = await self.do_move_in_board(move)
+        self.game.players[player_id - 1].moves.append(move)
         await self.game.game_messenger.send_response_to_players({
             "type": "make_move",
             "move": move_to_client.get_move_to_client(1).model_dump()
@@ -125,29 +126,38 @@ class Moving:
         return True
 
     def can_move(self, player_id: int, cell: Cell) -> dict:
-        if player_id == 1:
-            cell = cell.get_reverse_cell()
+        cell, garbage = self.check_and_convert_data_to_player_1(cell, None, player_id)
         cell_content = self.board.in_cell(cell)
         error = self.check_errors_in_move(player_id, cell_content)
         if error is not None:
             return error
-        if cell_content.value == "2":
-            can_move_to = self.piece_2_can_move_to(cell, player_id)
-        else:
-            can_move_to = [
-                neighbor_cell for neighbor_cell in cell.return_neighbors()
-                if self.can_move_there(neighbor_cell, player_id)
-            ]
+        can_move_to = self.can_move_to(cell, cell_content, player_id)
         if not can_move_to:
             return {"type": "error_cell_pushed", "message": "Cell can't move anywhere!"}
-        if player_id == 1:
-            cell = cell.get_reverse_cell()
-            can_move_to = [c.get_reverse_cell() for c in can_move_to]
+        cell, can_move_to = self.check_and_convert_data_to_player_1(cell, can_move_to, player_id)
         return {
             "type": "mark_cell",
             "cell": {"row": cell.row, "column": cell.column},
             "possible_moves": [{"row": c.row, "column": c.column} for c in can_move_to]
         }
+
+    @staticmethod
+    def check_and_convert_data_to_player_1(cell: Cell, can_move_to: List[Cell] | None, player_id: int) -> (
+            Cell, List[Cell] | None):
+        if player_id == 1:
+            cell = cell.get_reverse_cell()
+            if can_move_to:
+                can_move_to = [c.get_reverse_cell() for c in can_move_to]
+        return cell, can_move_to
+
+    def can_move_to(self, cell: Cell, cell_content: Piece, player_id: int) -> List[Cell]:
+        if cell_content.value == "2":
+            can_move_to_cells = self.piece_2_can_move_to(cell, player_id)
+        else:
+            can_move_to_cells = [neighbor_cell for neighbor_cell in cell.return_neighbors()
+                                 if self.can_move_there(neighbor_cell, player_id)]
+        can_move_to_cells = self.filter_repeating_moves(cell, can_move_to_cells, player_id)
+        return can_move_to_cells
 
     def piece_2_can_move_to(self, cell: Cell, player_id: int) -> List[Cell]:
         can_move_to = []
@@ -189,9 +199,31 @@ class Moving:
 
     async def send_to_graveyard(self, number_of_loser: int, in_from_cell: Piece, in_to_cell: Piece) -> None:
         if number_of_loser == 0:
-            await self.game.game_messenger.send_same_response_to_players({"type": "piece_captured", "piece": in_from_cell.to_dict()})
-            await self.game.game_messenger.send_same_response_to_players({"type": "piece_captured", "piece": in_to_cell.to_dict()})
+            await self.game.game_messenger.send_same_response_to_players(
+                {"type": "piece_captured", "piece": in_from_cell.to_dict()})
+            await self.game.game_messenger.send_same_response_to_players(
+                {"type": "piece_captured", "piece": in_to_cell.to_dict()})
         elif number_of_loser == 1:
-            await self.game.game_messenger.send_same_response_to_players({"type": "piece_captured", "piece": in_from_cell.to_dict()})
+            await self.game.game_messenger.send_same_response_to_players(
+                {"type": "piece_captured", "piece": in_from_cell.to_dict()})
         elif number_of_loser == 2:
-            await self.game.game_messenger.send_same_response_to_players({"type": "piece_captured", "piece": in_to_cell.to_dict()})
+            await self.game.game_messenger.send_same_response_to_players(
+                {"type": "piece_captured", "piece": in_to_cell.to_dict()})
+
+    def filter_repeating_moves(self, cell: Cell, can_move_to_cells: List[Cell], player_id: int) -> List[Cell]:
+        return [move_to_cell for move_to_cell in can_move_to_cells if
+                not self.is_repeating_move(cell, move_to_cell, player_id)]
+
+    def is_repeating_move(self, cell: Cell, move_to_cell: Cell, player_id: int) -> bool:
+        new_move = Move.create(cell, move_to_cell)
+        player_moves = self.game.players[player_id - 1].moves
+        if len(player_moves) < 3:
+            return False
+        last_move = player_moves[-1]
+        second_last_move = player_moves[-2]
+        third_last_move = player_moves[-3]
+        return (
+                new_move == last_move.get_reversed_direction_move() and
+                last_move == second_last_move.get_reversed_direction_move() and
+                second_last_move == third_last_move.get_reversed_direction_move()
+        )

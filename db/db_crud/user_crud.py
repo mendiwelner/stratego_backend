@@ -19,7 +19,7 @@ class UserCRUD:
         existing_user = db.query(User).filter(User.name == name).first()
         if existing_user:
             raise HTTPException(status_code=400, detail="Address already exists!")
-        new_user = User(name=name, password=password, setup=setup)
+        new_user = User(name=name, password=password, setup=setup, rating=0)
         db.add(new_user)
         db.commit()
         db.refresh(new_user)

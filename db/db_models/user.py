@@ -9,4 +9,5 @@ class User(Base):
     name = Column(String, index=True)
     password = Column(String, index=True)
     setup = Column(String, index=True)
+    rating = Column(Integer, index=True)
 
