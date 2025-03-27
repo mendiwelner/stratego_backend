@@ -1,6 +1,7 @@
 from main_files.piece_encoder import PieceEncoder
 import json
 import asyncio
+from fastapi.websockets import WebSocketState
 
 
 class GameMessenger:
@@ -18,6 +19,7 @@ class GameMessenger:
             await self.send_board_to_players()
 
     async def send_board_to_players(self) -> None:
+        self.game.board.initial_test_board()
         player_1_data = {
             "type": "board",
             "number_of_player": 1,
@@ -48,7 +50,8 @@ class GameMessenger:
 
     async def send_same_response_to_players(self, response: dict) -> None:
         for player in self.game.players:
-            await player.websocket.send_text(json.dumps(response))
+            if player.websocket.client_state == WebSocketState.CONNECTED:
+                await player.websocket.send_text(json.dumps(response))
 
     async def send_response_to_player(self, player_id: int, response: dict) -> None:
         await self.game.players[player_id - 1].websocket.send_text(json.dumps(response))

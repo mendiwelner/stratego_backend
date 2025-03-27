@@ -1,13 +1,14 @@
 from typing import List, Dict
 from fastapi import WebSocket
 import json
-from starlette.websockets import WebSocketDisconnect
 from main_files.game_messenger import GameMessenger
 from models.cell import Cell
 from models.move import Move
 from main_files.moving import Moving
 from main_files.player import Player
 from main_files.board import Board
+from fastapi.websockets import WebSocketState
+from fastapi import WebSocketDisconnect
 
 
 class Game:
@@ -35,7 +36,8 @@ class Game:
         for player in self.players:
             if player.player_id == player_id:
                 self.players.remove(player)
-        await self.players[0].websocket.send_text(json.dumps({"type": "message", "message": "other player disconnected"}))
+        await self.players[0].websocket.send_text(json.dumps({"type": "message",
+                                                            "message": "other player disconnected"}))
 
     async def disconnect_players(self) -> None:
         for player in self.players[:]:
@@ -45,12 +47,12 @@ class Game:
                 )
             except WebSocketDisconnect:
                 pass
-            except Exception as e:
-                print(f"Error when trying to send a message to the player: {e}")
+            except (WebSocketDisconnect, RuntimeError):
+                pass
             try:
                 await player.websocket.close()
-            except Exception as e:
-                print(f"Error when trying to close the player's connection: {e}")
+            except (WebSocketDisconnect, RuntimeError):
+                pass
             self.players.remove(player)
 
     async def process_data(self, player_id: int, data: Dict) -> dict:
@@ -76,6 +78,7 @@ class Game:
     async def process_move(self, player_id: int, move: Move) -> str:
         if self.moving.legal_move(move, player_id):
             await self.moving.do_move(move, player_id)
+            await self.check_win()
             return "move done!"
         else:
             return "not a legal move!"
@@ -92,3 +95,31 @@ class Game:
             self.player_turn = 2
         else:
             self.player_turn = 1
+
+    async def check_win(self):
+        loser = self.board.check_loser_by_flag()
+        reason = "flag_occupied"
+        if loser == 0:
+            loser = self.board.check_loser_by_moved_pieces()
+            reason = "no_moved_pieces"
+        if loser == 1:
+            await self.game_messenger.send_response_to_players({"type": "endgame",
+                                                                "result": "loser",
+                                                                "reason": reason},
+                                                               {"type": "endgame",
+                                                                "result": "winner",
+                                                                "reason": reason})
+        elif loser == 2:
+            await self.game_messenger.send_response_to_players({"type": "endgame",
+                                                                "result": "winner",
+                                                                "reason": reason},
+                                                               {"type": "endgame",
+                                                                "result": "loser",
+                                                                "reason": reason})
+        elif loser == 3:
+            await self.game_messenger.send_response_to_players({"type": "endgame",
+                                                                "result": "draw",
+                                                                "reason": "no_moved_pieces"},
+                                                               {"type": "endgame",
+                                                                "result": "draw",
+                                                                "reason": "no_moved_pieces"})

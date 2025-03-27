@@ -104,3 +104,51 @@ class Board:
                 if isinstance(cell, Piece) and cell.number_of_player == 1:
                     cell.value = ""
         return matrix_copy
+
+    def check_loser_by_flag(self) -> int:
+        player_1_has_flag = False
+        player_2_has_flag = False
+        for row in self.board_matrix:
+            for cell in row:
+                if isinstance(cell, Piece) and cell.value == 'f':
+                    if cell.number_of_player == 1:
+                        player_1_has_flag = True
+                    elif cell.number_of_player == 2:
+                        player_2_has_flag = True
+        if not player_1_has_flag:
+            return 1
+        if not player_2_has_flag:
+            return 2
+        return 0
+
+    def check_loser_by_moved_pieces(self) -> int:
+        player_1_can_move = False
+        player_2_can_move = False
+        for row in self.board_matrix:
+            for cell in row:
+                if isinstance(cell, Piece) and cell.value.isdigit():
+                    if cell.number_of_player == 1:
+                        player_1_can_move = True
+                    elif cell.number_of_player == 2:
+                        player_2_can_move = True
+        if not player_1_can_move and not player_2_can_move:
+            return 3
+        if not player_1_can_move:
+            return 1
+        if not player_2_can_move:
+            return 2
+        return 0
+
+    def initial_test_board(self):
+        self.board_matrix = [
+            ["o"] * 10,
+            ["o"] * 10,
+            ["o"] * 10,
+            ["o"] * 10,
+            ["o", "o", "x", "o", "o", "o", "o", "o", "o", "o"],
+            ["o", "o", "x", "o", "o", "o", "o", "o", "o", "o"],
+            ["o"] * 10,
+            ["o"] * 10,
+            [Piece.create(1, "f"), Piece.create(2, "5"), "o", "o", "o", "o", "o", "o", "o", "o"],
+            [Piece.create(1, "5"), Piece.create(2, "f"), "o", "o", "o", "o", "o", "o", "o", "o"]
+        ]

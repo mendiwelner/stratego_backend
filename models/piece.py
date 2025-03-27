@@ -8,6 +8,10 @@ class Piece(BaseModel):
     def __str__(self):
         return f"{self.value[0]}"
 
+    @staticmethod
+    def create(player: int, value: str):
+        return Piece(number_of_player=player, value=value)
+
     def to_dict(self):
         return {
             "number_of_player": self.number_of_player,
