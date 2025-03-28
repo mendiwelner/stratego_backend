@@ -1,5 +1,4 @@
 from typing import List, Type
-
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from db.db_models.user import User
@@ -19,7 +18,7 @@ class UserCRUD:
         existing_user = db.query(User).filter(User.name == name).first()
         if existing_user:
             raise HTTPException(status_code=400, detail="Address already exists!")
-        new_user = User(name=name, password=password, setup=setup, rating=0)
+        new_user = User(name=name, password=password, setup=setup, rating=1500)
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
@@ -48,4 +47,15 @@ class UserCRUD:
         except Exception as e:
             db.rollback()
             return {"message": f"Error occurred: {str(e)}"}
+
+    @staticmethod
+    def update_user_rating(db: Session, user_name: str, new_rating: int) -> dict:
+        user = db.query(User).filter(User.name == user_name).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        user.rating = new_rating
+        db.commit()
+        db.refresh(user)
+        return {"message": "User rating updated successfully", "user_name": user_name, "new_rating": new_rating}
+
 

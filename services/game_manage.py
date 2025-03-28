@@ -37,13 +37,15 @@ class GameManage:
         if not await AuthManager.verify_token_and_close_websocket(player_websocket, token):
             return
         user_id = await AuthManager.verify_token(token)
-        player_name, setup = GameManage.get_name_from_user_id(user_id)
-        player_id = await game.connect_player(player_websocket, player_name, setup)
+        player_name, setup, rating = GameManage.get_details_from_user_id(user_id)
+        player_id = await game.connect_player(player_websocket, player_name, setup, rating)
         await GameManage.process_player_to_game_connection(player_websocket, player_id, game)
 
     @staticmethod
-    def get_name_from_user_id(user_id: int,  db: Session = DBSessionManager.get_db()) -> (str, str):
-        return UserCRUD.get_user(db=db, user_id=user_id).name, UserCRUD.get_user(db=db, user_id=user_id).setup
+    def get_details_from_user_id(user_id: int,  db: Session = DBSessionManager.get_db()) -> (str, str, int):
+        return (UserCRUD.get_user(db=db, user_id=user_id).name,
+                UserCRUD.get_user(db=db, user_id=user_id).setup,
+                UserCRUD.get_user(db=db, user_id=user_id).rating)
 
     @staticmethod
     async def process_player_to_game_connection(player_websocket: WebSocket, player_id: int, game: Game) -> None:

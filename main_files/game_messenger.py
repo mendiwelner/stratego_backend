@@ -19,7 +19,7 @@ class GameMessenger:
             await self.send_board_to_players()
 
     async def send_board_to_players(self) -> None:
-        #self.game.board.initial_test_board()
+        self.game.board.initial_test_board()
         player_1_data = {
             "type": "board",
             "number_of_player": 1,

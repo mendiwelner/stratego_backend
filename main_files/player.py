@@ -4,12 +4,13 @@ from models.move import Move
 
 
 class Player:
-    def __init__(self, player_id: int, websocket: WebSocket, setup=None, player_name=None):
+    def __init__(self, player_id: int, websocket: WebSocket, setup=None, player_name=None, rating: int = 0):
         self.player_id = player_id
         self.player_name = player_name
         self.websocket = websocket
         self.setup = setup
         self.moves: List[Move] = []
+        self.rating = rating
 
     def __str__(self):
         moves_str = ", ".join(str(move) for move in self.moves) if self.moves else "No moves"
