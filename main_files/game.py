@@ -1,16 +1,14 @@
 from typing import List, Dict
 from fastapi import WebSocket
 import json
-from db.db_crud.user_crud import UserCRUD
 from main_files.game_messenger import GameMessenger
+from main_files.rating import Rating
 from models.cell import Cell
 from models.move import Move
 from main_files.moving import Moving
 from main_files.player import Player
 from main_files.board import Board
 from fastapi import WebSocketDisconnect
-from db.db_manager.db_session_manager import DBSessionManager
-from sqlalchemy.orm import Session
 
 
 class Game:
@@ -69,6 +67,8 @@ class Game:
         elif data["action"] == "check_cell_hover":
             cell = Cell(**data["cell"])
             return self.convert_mark_to_hover_data(cell, player_id)
+        elif data["action"] == "disconnect":
+            return await self.player_leaving_the_game(player_id)
 
     def convert_mark_to_hover_data(self, cell: Cell, player_id: int) -> dict:
         data = self.moving.can_move(player_id, cell)
@@ -108,7 +108,7 @@ class Game:
             loser = self.board.check_loser_by_moved_pieces()
             reason = "no_moved_pieces"
         if loser != 0:
-            self.update_players_rating(loser)
+            Rating.update_players_rating(self.players, loser)
             player_1_rating_change = self.players[0].rating - player_1_rating
             player_2_rating_change = self.players[1].rating - player_2_rating
             messages = {
@@ -140,38 +140,34 @@ class Game:
             }
             await self.game_messenger.send_response_to_players(player_1_data, player_2_data)
 
-    def update_players_rating(self, loser: int):
-        k = 30
-        player_1_rating = self.players[0].rating
-        player_2_rating = self.players[1].rating
+    async def player_leaving_the_game(self, player_id: int) -> dict:
+        if player_id == 1:
+            loser_index, winner_index = 0, 1
+        else:
+            loser_index, winner_index = 1, 0
+        player_loser = self.players[loser_index]
+        player_winner = self.players[winner_index]
+        initial_loser_rating = player_loser.rating
+        initial_winner_rating = player_winner.rating
+        Rating.update_players_rating(self.players, player_loser.player_id)
+        loser_rating_change = player_loser.rating - initial_loser_rating
+        winner_rating_change = player_winner.rating - initial_winner_rating
+        winner_data = {
+            "type": "endgame",
+            "result": "winner",
+            "reason": "leaving",
+            "rating_change": winner_rating_change
+        }
+        loser_data = {
+            "type": "endgame",
+            "result": "loser",
+            "reason": "leaving",
+            "rating_change": loser_rating_change
+        }
+        if player_winner.player_id < player_loser.player_id:
+            await self.game_messenger.send_response_to_players(winner_data, loser_data)
+        else:
+            await self.game_messenger.send_response_to_players(loser_data, winner_data)
+        return {"type": "message", "message": f"player {player_id} left the game"}
 
-        if loser == 3:
-            winner_rating_change = k * (0.5 - self.calculate_expectation(player_1_rating, player_2_rating))
-            loser_rating_change = k * (0.5 - self.calculate_expectation(player_2_rating, player_1_rating))
-            self.players[0].rating += winner_rating_change
-            self.players[1].rating += loser_rating_change
-        elif loser == 1:
-            winner_rating_change = k * (1 - self.calculate_expectation(player_1_rating, player_2_rating))
-            loser_rating_change = k * (0 - self.calculate_expectation(player_2_rating, player_1_rating))
-            self.players[1].rating += winner_rating_change
-            self.players[0].rating += loser_rating_change
-        elif loser == 2:
-            winner_rating_change = k * (1 - self.calculate_expectation(player_2_rating, player_1_rating))
-            loser_rating_change = k * (0 - self.calculate_expectation(player_1_rating, player_2_rating))
-            self.players[0].rating += winner_rating_change
-            self.players[1].rating += loser_rating_change
-
-        self.players[0].rating = round(self.players[0].rating)
-        self.players[1].rating = round(self.players[1].rating)
-
-        Game.update_user_rating(self.players[0].player_name, self.players[0].rating)
-        Game.update_user_rating(self.players[1].player_name, self.players[1].rating)
-
-    @staticmethod
-    def update_user_rating(player_name: str, rating: int, db: Session = DBSessionManager.get_db()) -> dict:
-        return UserCRUD.update_user_rating(db, player_name, rating)
-
-    @staticmethod
-    def calculate_expectation(rating_a: int, rating_b: int):
-        return 1 / (1 + 10 ** ((rating_b - rating_a) / 400))
 
