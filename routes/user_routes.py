@@ -32,9 +32,9 @@ def read_user(user_id: int, db: Session = Depends(DBSessionManager.get_db)) -> d
     return UserCRUD.get_user(db, user_id)
 
 
-@user_router.get("/get_users/{users}")
-def get_users(db: Session = Depends(DBSessionManager.get_db)):
-    return UserCRUD.get_users(db)
+@user_router.get("/get_all_users/{users}")
+def get_all_users(db: Session = Depends(DBSessionManager.get_db)):
+    return UserCRUD.get_all_users(db)
 
 
 @user_router.delete("/delete_user/{user_id}")

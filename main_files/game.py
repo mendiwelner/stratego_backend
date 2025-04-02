@@ -9,6 +9,7 @@ from main_files.moving import Moving
 from main_files.player import Player
 from main_files.board import Board
 from fastapi import WebSocketDisconnect
+import asyncio
 
 
 class Game:
@@ -138,6 +139,7 @@ class Game:
                 "reason": reason,
                 "rating_change": player_2_rating_change
             }
+            await asyncio.sleep(1.4)
             await self.game_messenger.send_response_to_players(player_1_data, player_2_data)
 
     async def player_leaving_the_game(self, player_id: int) -> dict:

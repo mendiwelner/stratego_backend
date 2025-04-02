@@ -1,9 +1,11 @@
-from sqlalchemy.orm import Session
 from db.db_crud.user_crud import UserCRUD
 from main_files.setup import Setup
 from services.auth_manager import AuthManager
 from services.auth_service import AuthService
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import Depends
+from sqlalchemy.orm import Session
+from db.db_manager.db_session_manager import DBSessionManager
 
 
 class UserService:
@@ -39,4 +41,12 @@ class UserService:
             return {"error": "User not found"}
         UserCRUD.update_user_activity(db, user.name, False)
         return {"message": f"User {user.name} logged out successfully"}
+
+    @staticmethod
+    def deactivate_all_users(db: Session = DBSessionManager.get_db()) -> dict:
+        users = UserCRUD.get_all_users(db)
+        for user in users:
+            if user.is_active:
+                UserCRUD.update_user_activity(db, user.name, False)
+        return {"message": "All users have been deactivated successfully"}
 

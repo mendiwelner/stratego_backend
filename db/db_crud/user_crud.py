@@ -10,7 +10,7 @@ class UserCRUD:
         return db.query(User).filter(User.id == user_id).first()
 
     @staticmethod
-    def get_users(db: Session) -> List[Type[User]]:
+    def get_all_users(db: Session) -> List[Type[User]]:
         return db.query(User).all()
 
     @staticmethod
@@ -70,6 +70,5 @@ class UserCRUD:
 
     @staticmethod
     def get_active_users_count(db: Session) -> dict:
-        print("l")
         active_users_count = db.query(User).filter(User.is_active).count()
         return {"active_users_count": active_users_count}

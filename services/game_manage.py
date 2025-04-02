@@ -52,7 +52,7 @@ class GameManage:
         try:
             await GameManage.get_data_and_send_response(player_websocket, player_id, game)
         except WebSocketDisconnect:
-            await game.game_messenger.send_same_response_to_players({"type": "endgame", "result": "winner", "reason": "leaving"})
+            await game.player_leaving_the_game(player_id)
             await GameManage.delete_game(game.game_id)
         except Exception as exception:
             await GameManage.handle_exception(exception, player_websocket)
