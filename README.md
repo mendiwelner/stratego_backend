@@ -1,3 +1,3 @@
 ## 🎥 Demo
 
-![Application Demo](screenshots/demo.gif)
+![Application Demo](demo/strategoAnimation.gif)
